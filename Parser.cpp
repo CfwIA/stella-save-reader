@@ -24,6 +24,15 @@ bool is_printable_char(char c) {
 	return c >= 32 && c < 127;
 }
 
+std::unordered_map<st_obj::type, std::string> string_type_table {
+	{st_obj::type::INTEGER, "integer"},
+	{st_obj::type::LIST, "list"},
+	{st_obj::type::NUMBER, "number"},
+	{st_obj::type::OBJECT, "object"},
+	{st_obj::type::STRING, "string"},
+	{st_obj::type::UNDEFINED, "undefined"}
+};
+
 std::string purify_str(const std::string_view& v) {
 	std::string str = std::string(v);
 	for (auto& a : str) {
@@ -393,6 +402,8 @@ st_obj parse_object(const std::string_view& text, size_t& position) {
 				continue;
 			}
 			auto objt = get_object_type(text, position);
+			if (std::get<2>(value.data).contains(fieldname))
+				std::cout << "Fieldname \"" << fieldname <<  "\" type " << string_type_table.at(objt) << " is already registered\n";
 			if (objt == st_obj::type::UNDEFINED)
 				throw std::runtime_error("Error while parsing object : can't determine if next datatype is either list or object");
 			if (objt == st_obj::type::OBJECT)
@@ -401,7 +412,20 @@ st_obj parse_object(const std::string_view& text, size_t& position) {
 				std::get<2>(value.data)[fieldname] = (parse_list(text, position));
 		}
 		else {
-			std::get<2>(value.data)[fieldname] = (parse_string_number(text, position));
+			if (std::get<2>(value.data).contains(fieldname)) {
+				if (std::get<2>(value.data).at(fieldname).datatype != st_obj::LIST) {
+					// Transform to list
+					st_obj nob;
+					nob.datatype = st_obj::LIST;
+					auto vtor = st_obj::vector_t{};
+					vtor.push_back(std::get<2>(value.data).at(fieldname));
+					nob.data = std::move(vtor);
+					std::get<2>(value.data).at(fieldname) = std::move(nob);
+				}
+				std::get<1>(std::get<2>(value.data).at(fieldname).data).push_back(parse_string_number(text, position));
+			} else {
+				std::get<2>(value.data)[fieldname] = (parse_string_number(text, position));
+			}
 		}
 
 		if (position >= text.size())
