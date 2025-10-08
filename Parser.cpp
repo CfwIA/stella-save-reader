@@ -402,14 +402,26 @@ st_obj parse_object(const std::string_view& text, size_t& position) {
 				continue;
 			}
 			auto objt = get_object_type(text, position);
-			if (std::get<2>(value.data).contains(fieldname))
-				std::cout << "Fieldname \"" << fieldname <<  "\" type " << string_type_table.at(objt) << " is already registered\n";
 			if (objt == st_obj::type::UNDEFINED)
 				throw std::runtime_error("Error while parsing object : can't determine if next datatype is either list or object");
-			if (objt == st_obj::type::OBJECT)
-				std::get<2>(value.data)[fieldname] = (parse_object(text, position));
-			if (objt == st_obj::type::LIST)
-				std::get<2>(value.data)[fieldname] = (parse_list(text, position));
+			if (std::get<2>(value.data).contains(fieldname)) {
+				if (std::get<2>(value.data).at(fieldname).datatype != st_obj::LIST) {
+					st_obj nob;
+					nob.datatype = st_obj::type::LIST;
+					auto vtor = st_obj::vector_t{};
+					vtor.push_back(std::get<2>(value.data).at(fieldname));
+					nob.data = std::move(vtor);
+					std::get<2>(value.data).at(fieldname) = std::move(nob);
+				}
+				std::get<1>(std::get<2>(value.data).at(fieldname).data).push_back(
+					objt == st_obj::type::OBJECT ? (parse_object(text, position)) : (parse_list(text, position))
+				);
+			} else {
+				if (objt == st_obj::type::OBJECT)
+					std::get<2>(value.data)[fieldname] = (parse_object(text, position));
+				if (objt == st_obj::type::LIST)
+					std::get<2>(value.data)[fieldname] = (parse_list(text, position));
+			}
 		}
 		else {
 			if (std::get<2>(value.data).contains(fieldname)) {
