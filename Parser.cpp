@@ -203,6 +203,21 @@ bool is_field_id_char(char c) {
 		(c >= '0' && c <= '9') || c == '_' || c == '.' || c == '-' || c == '\"';
 }
 
+std::optional<long long> parse_to_int(const std::string_view& v) {
+	if (v.size() == 0) return std::nullopt;
+	if (v[0] == '-') {
+		auto db = parse_to_int(v.substr(1));
+		return db.has_value() ? db.value() * -1 : db;
+	}
+	if (v.size() > 18) return std::nullopt;
+	long long value = 0LL;
+	for(const auto& va : v) {
+		value *= 10;
+		value += va - '0';
+	}
+	return value;
+}
+
 std::optional<double> parse_to_double(const std::string_view& v) {
 	if (v.size() == 0)
 		return std::nullopt;
@@ -290,6 +305,12 @@ st_obj parse_string_number(const std::string_view& text, size_t& position) {
 
 	st_obj value;
 	auto data = text.substr(start, position - start);
+	auto intval = parse_to_int(data);
+	if (intval.has_value()) {
+		value.datatype = st_obj::type::INTEGER;
+		value.data = intval.value();
+		return value;
+	}
 	auto doubleval = parse_to_double(data);
 	if (doubleval.has_value()) {
 		value.datatype = st_obj::type::NUMBER;
