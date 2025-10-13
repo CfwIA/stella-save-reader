@@ -209,6 +209,9 @@ std::optional<long long> parse_to_int(const std::string_view& v) {
 		auto db = parse_to_int(v.substr(1));
 		return db.has_value() ? db.value() * -1 : db;
 	}
+	for(const auto& a : v) {
+		if (a < '0' || a > '9') return std::nullopt;
+	}
 	if (v.size() > 18) return std::nullopt;
 	long long value = 0LL;
 	for(const auto& va : v) {
@@ -489,6 +492,7 @@ st_gamestate parse_savefile(const std::string& path) {
 	if (arc == nullptr)
 		throw std::runtime_error("Can't open zip archive");
 
+	st_gamestate state;
 	while (ar_parse_entry(arc)) {
 		std::string entryname = ar_entry_get_name(arc);
 		if (entryname == "gamestate") {
@@ -496,7 +500,6 @@ st_gamestate parse_savefile(const std::string& path) {
 			std::vector<char> bytes(size);
 			ar_entry_uncompress(arc, bytes.data(), size);
 
-			st_gamestate state;
 			state.original_data = std::string(bytes.data(), size);
 			state.load_time = system_clock::now() - unarrstart;
 
@@ -507,13 +510,23 @@ st_gamestate parse_savefile(const std::string& path) {
 			state.root_obj = parse_object(state.original_data, position);
 			auto stop = system_clock::now();
 			state.parse_time = stop - start;
+		}
+		if (entryname == "meta") {
+			size_t size = ar_entry_get_size(arc);
+			std::vector<char> bytes(size);
+			ar_entry_uncompress(arc, bytes.data(), size);
 
-			ar_close_archive(arc);
-			ar_close(strm);
-			return state;
+			state.meta_data = std::string(bytes.data(), size);
+
+			size_t position = 0;
+			if (state.meta_data.starts_with("EU4txt"))
+				position = 7;
+			state.meta_obj = parse_object(state.meta_data, position);
 		}
 	}
-	throw std::runtime_error("Can't file gamestate entry in save file");
+	ar_close_archive(arc);
+	ar_close(strm);
+	return state;
 }
 
 std::string loadup_zip_gamestate(const std::string& path) {

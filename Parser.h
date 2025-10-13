@@ -45,6 +45,8 @@ struct st_obj {
 struct st_gamestate {
 	std::string original_data;
 	st_obj root_obj;
+	std::string meta_data;
+	st_obj meta_obj;
 	std::chrono::system_clock::duration parse_time;
 	std::chrono::system_clock::duration load_time;
 };
