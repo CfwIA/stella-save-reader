@@ -4,6 +4,16 @@
 
 #include "Parser.h"
 
+std::string construct_svname(const std::string& gamename, const std::string& date) {
+	std::string str = gamename + '_' + date;
+	for(auto& c : str) {
+		if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))) {
+			c = '_';
+		}
+	}
+	return str + ".json";
+}
+
 int main(int argc, char** argv) {
 
 	std::vector<std::string> args;
@@ -15,7 +25,9 @@ int main(int argc, char** argv) {
 	std::string outfile = args[2];
 
 	auto gamestate = parse_savefile(readfilepath);
-	std::cout << gamestate.meta_obj["date"].str() << '\n';
+	std::cout << construct_svname(
+		gamestate.meta_obj.obj().contains("name") ? gamestate.meta_obj["name"].str() : gamestate.meta_obj["displayed_country_name"].str(),
+		gamestate.meta_obj["date"].str()) << '\n';
 	std::ofstream out(outfile);
 	if (out.is_open()) {
 		out << gamestate.root_obj.to_json();
