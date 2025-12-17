@@ -42,156 +42,178 @@ std::string purify_str(const std::string_view& v) {
 	return str;
 }
 
-	void st_obj::to_json_private(std::ostringstream& oss) const {
-		if (datatype == NUMBER) {
-			oss << std::get<3>(data);
-			return;
-		}
-		if (datatype == INTEGER) {
-			oss << std::get<4>(data);
-			return;
-		}
-		if (datatype == STRING) {
-			oss << '\"' << purify_str(std::get<0>(data)) << '\"';
-			return;
-		}
-		if (datatype == LIST) {
-			oss << "[";
-			const auto& list = std::get<1>(data);
-			for (auto it = list.begin(); it != list.end(); ++it) {
-				if (it != list.begin())
-					oss << ',';
-				it->to_json_private(oss);
-			}
-			oss << ']';
-			return;
-		}
-		if (datatype == OBJECT) {
-			const auto& fields = std::get<2>(data);
-			if (fields.size() == 0) {
-				oss << "{}";
-				return;
-			}
-			oss << '{';
-			for (auto it = fields.begin(); it != fields.end(); ++it) {
-				if (it != fields.begin())
-					oss << ',';
-				oss << '\"' << it->first << "\":";
-				it->second.to_json_private(oss);
-			}
-			oss << '}';
-			return;
-		}
-		oss << "null";
-	}
-
-	std::string st_obj::to_json() const {
-		std::ostringstream oss;
-		to_json_private(oss);
-		return oss.str();
-	}
-
-	st_obj::operator std::string_view&() {
-		if (datatype != STRING)
-			throw std::runtime_error("std::string_view conversion operator error");
-		return std::get<0>(data);
-	}
-
-	st_obj::operator double() {
-		if (datatype != NUMBER)
-			throw std::runtime_error("operator double conversion operator error");
-		return std::get<3>(data);
-	}
-
-	std::string st_obj::str() const {
-		if (datatype != STRING)
-			throw std::runtime_error("str() function error");
-		return std::string(std::get<0>(data));
-	}
-
-	st_obj::vector_t& st_obj::list() {
-		if (datatype != LIST)
-			throw std::runtime_error("str() function error");
-		return std::get<1>(data);
-	}
-
-	const st_obj::vector_t& st_obj::list() const {
-		if (datatype != LIST)
-			throw std::runtime_error("str() function error");
-		return std::get<1>(data);
-	}
-
-	double st_obj::number() const {
-		if (datatype != NUMBER)
-			throw std::runtime_error("operator double conversion operator error");
-		return std::get<3>(data);
-	}
-
-	st_obj::field_t& st_obj::obj() {
-		if (datatype != OBJECT)
-			throw std::runtime_error("obj() function error");
-		return std::get<2>(data);
-	}
-	
-	const st_obj::field_t& st_obj::obj() const {
-		if (datatype != OBJECT)
-			throw std::runtime_error("obj() function error");
-		return std::get<2>(data);
-	}
-
-	st_obj& st_obj::operator[](const size_t index) {
-		if (datatype != LIST)
-			throw std::runtime_error("list subscription operator error");
-		auto it = std::get<1>(data).begin();
-		for (size_t i = 0; i < index; ++i)
-			++it;
-		return *it;
-	}
-
-	const st_obj& st_obj::operator[](const size_t index) const {
-		if (datatype != LIST)
-			throw std::runtime_error("list subscription operator error");
-		auto it = std::get<1>(data).begin();
-		for (size_t i = 0; i < index; ++i)
-			++it;
-		return *it;
-	}
-
-	st_obj& st_obj::operator[](const char* const fieldname)
+void st_obj::to_json_private(std::ostringstream &oss) const
+{
+	if (datatype == NUMBER)
 	{
-		if (datatype != OBJECT)
-			throw std::runtime_error("object subscription operator error");
-		return std::get<2>(data).at(fieldname);
+		oss << std::get<3>(data);
+		return;
 	}
-
-	const st_obj& st_obj::operator[](const char* const fieldname) const
+	if (datatype == INTEGER)
 	{
-		if (datatype != OBJECT)
-			throw std::runtime_error("object subscription operator error");
-		return std::get<2>(data).at(fieldname);
+		oss << std::get<4>(data);
+		return;
 	}
-
-	bool st_obj::has_field(const std::string& f) const {
-		return datatype == OBJECT && std::get<2>(data).find(f) != std::get<2>(data).end();
+	if (datatype == STRING)
+	{
+		oss << '\"' << purify_str(std::get<0>(data)) << '\"';
+		return;
 	}
-
-	std::string st_obj::get_datatype_str() const {
-		switch (datatype) {
-		case st_obj::type::INTEGER:
-			return "int";
-		case st_obj::type::LIST:
-			return "list";
-		case st_obj::type::NUMBER:
-			return "double";
-		case st_obj::type::OBJECT:
-			return "object";
-		case st_obj::type::STRING:
-			return "string";
-		default:
-			return "undefined";
+	if (datatype == LIST)
+	{
+		oss << "[";
+		const auto &list = std::get<1>(data);
+		for (auto it = list.begin(); it != list.end(); ++it)
+		{
+			if (it != list.begin())
+				oss << ',';
+			it->to_json_private(oss);
 		}
+		oss << ']';
+		return;
 	}
+	if (datatype == OBJECT)
+	{
+		const auto &fields = std::get<2>(data);
+		if (fields.size() == 0)
+		{
+			oss << "{}";
+			return;
+		}
+		oss << '{';
+		for (auto it = fields.begin(); it != fields.end(); ++it)
+		{
+			if (it != fields.begin())
+				oss << ',';
+			oss << '\"' << it->first << "\":";
+			it->second.to_json_private(oss);
+		}
+		oss << '}';
+		return;
+	}
+	oss << "null";
+}
 
+std::string st_obj::to_json() const
+{
+	std::ostringstream oss;
+	to_json_private(oss);
+	return oss.str();
+}
+
+st_obj::operator std::string_view &()
+{
+	if (datatype != STRING)
+		throw std::runtime_error("std::string_view conversion operator error");
+	return std::get<0>(data);
+}
+
+st_obj::operator double()
+{
+	if (datatype != NUMBER)
+		throw std::runtime_error("operator double conversion operator error");
+	return std::get<3>(data);
+}
+
+std::string st_obj::str() const
+{
+	if (datatype != STRING)
+		throw std::runtime_error("str() function error");
+	return std::string(std::get<0>(data));
+}
+
+st_obj::vector_t &st_obj::list()
+{
+	if (datatype != LIST)
+		throw std::runtime_error("str() function error");
+	return std::get<1>(data);
+}
+
+const st_obj::vector_t &st_obj::list() const
+{
+	if (datatype != LIST)
+		throw std::runtime_error("str() function error");
+	return std::get<1>(data);
+}
+
+double st_obj::number() const
+{
+	if (datatype != NUMBER)
+		throw std::runtime_error("operator double conversion operator error");
+	return std::get<3>(data);
+}
+
+st_obj::field_t &st_obj::obj()
+{
+	if (datatype != OBJECT)
+		throw std::runtime_error("obj() function error");
+	return std::get<2>(data);
+}
+
+const st_obj::field_t &st_obj::obj() const
+{
+	if (datatype != OBJECT)
+		throw std::runtime_error("obj() function error");
+	return std::get<2>(data);
+}
+
+st_obj &st_obj::operator[](const size_t index)
+{
+	if (datatype != LIST)
+		throw std::runtime_error("list subscription operator error");
+	auto it = std::get<1>(data).begin();
+	for (size_t i = 0; i < index; ++i)
+		++it;
+	return *it;
+}
+
+const st_obj &st_obj::operator[](const size_t index) const
+{
+	if (datatype != LIST)
+		throw std::runtime_error("list subscription operator error");
+	auto it = std::get<1>(data).begin();
+	for (size_t i = 0; i < index; ++i)
+		++it;
+	return *it;
+}
+
+st_obj &st_obj::operator[](const char *const fieldname)
+{
+	if (datatype != OBJECT)
+		throw std::runtime_error("object subscription operator error");
+	return std::get<2>(data).at(fieldname);
+}
+
+const st_obj &st_obj::operator[](const char *const fieldname) const
+{
+	if (datatype != OBJECT)
+		throw std::runtime_error("object subscription operator error");
+	return std::get<2>(data).at(fieldname);
+}
+
+bool st_obj::has_field(const std::string &f) const
+{
+	return datatype == OBJECT && std::get<2>(data).find(f) != std::get<2>(data).end();
+}
+
+std::string st_obj::get_datatype_str() const
+{
+	switch (datatype)
+	{
+	case st_obj::type::INTEGER:
+		return "int";
+	case st_obj::type::LIST:
+		return "list";
+	case st_obj::type::NUMBER:
+		return "double";
+	case st_obj::type::OBJECT:
+		return "object";
+	case st_obj::type::STRING:
+		return "string";
+	default:
+		return "undefined";
+	}
+}
 
 bool is_separator(char c) {
 	return c == ' ' || c == '\t' || c == '\n' || c == '\r';
