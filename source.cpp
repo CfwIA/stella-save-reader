@@ -21,10 +21,25 @@ int main(int argc, char** argv) {
 		args.push_back(argv[i]);
 	}
 
+	if (args.size() < 2) {
+		std::cout << "Not enough CLI args";
+		return 1;
+	}
+
 	std::string readfilepath = args[1];
 	std::string outfile = args[2];
 
-	auto gamestate = parse_savefile(readfilepath);
+	if (readfilepath.ends_with(".hoi4")) {
+		auto gamestate = parse_raw_hoi4_savefile(readfilepath);
+		std::ofstream out(outfile);
+		if (out.is_open()) {
+			out << gamestate.root_obj.to_json();
+			out.close();
+		}
+		return;
+	}
+
+	auto gamestate = parse_stellaris_savefile(readfilepath);
 	std::cout << construct_svname(
 		gamestate.meta_obj.obj().contains("name") ? gamestate.meta_obj["name"].str() : gamestate.meta_obj["displayed_country_name"].str(),
 		gamestate.meta_obj["date"].str()) << '\n';

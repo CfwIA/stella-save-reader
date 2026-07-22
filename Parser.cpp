@@ -222,7 +222,7 @@ bool is_separator(char c) {
 bool is_field_id_char(char c) {
 	return (c >= 'a' && c <= 'z') ||
 		(c >= 'A' && c <= 'Z') ||
-		(c >= '0' && c <= '9') || c == '_' || c == '.' || c == '-' || c == '\"';
+		(c >= '0' && c <= '9') || c == '_' || c == '.' || c == '-' || c == '\"' || c == '^' || c == '@' || c == ':' || c == '\'';
 }
 
 std::optional<long long> parse_to_int(const std::string_view& v) {
@@ -330,7 +330,7 @@ st_obj parse_string_number(const std::string_view& text, size_t& position) {
 
 	// Read of text until next line separator
 	size_t start = position;
-	while (!is_separator(text[position])) {
+	while (!is_separator(text[position]) && text[position] != '}') {
 		++position;
 	}
 
@@ -453,6 +453,9 @@ st_obj parse_object(const std::string_view& text, size_t& position) {
 				++position;
 				continue;
 			}
+			if (fieldname == "fighter_equipment_0") {
+				std::cout << "OKEY";
+			}
 			auto objt = get_object_type(text, position);
 			if (objt == st_obj::type::UNDEFINED)
 				throw std::runtime_error("Error while parsing object : can't determine if next datatype is either list or object");
@@ -510,7 +513,7 @@ st_obj parse_object(const std::string_view& text, size_t& position) {
 	}
 }
 
-st_gamestate parse_savefile(const std::string& path) {
+st_gamestate parse_stellaris_savefile(const std::string& path) {
 	auto unarrstart = system_clock::now();
 	auto* strm = ar_open_file(path.c_str());
 	if (strm == nullptr)
@@ -557,6 +560,29 @@ st_gamestate parse_savefile(const std::string& path) {
 	return state;
 }
 
+std::string read_file_to_str(const std::string& filepath) {
+	std::ifstream fileStream(filepath);
+	if (!fileStream.is_open()) {
+		throw std::runtime_error("Failed to open file: " + filepath);
+	}
+
+	std::stringstream stringBuffer;
+	stringBuffer << fileStream.rdbuf();
+	return stringBuffer.str();
+}
+
+st_gamestate parse_raw_hoi4_savefile(const std::string& path)
+{
+	st_gamestate state;
+	state.original_data = read_file_to_str(path);
+
+	if (state.original_data.starts_with("HOI4txt")) {
+		size_t position = 8;
+		state.root_obj = parse_object(state.original_data, position);
+	}
+	return state;
+}
+
 std::string loadup_zip_gamestate(const std::string& path) {
 	auto* strm = ar_open_file(path.c_str());
 	if (strm == nullptr)
@@ -594,7 +620,7 @@ std::vector<T> populate_dataset(const std::string& folder, std::function<T(const
 		++progress;
 		int sizeofbar = (progress * 65 / filecount);
 		std::cout << "\rparsing " << dir_entry.path().filename() << "  |" << std::string(sizeofbar, '#') << std::string(65 - sizeofbar, ' ') << '|';
-		rtval.push_back(func(parse_savefile(dir_entry.path().string())));
+		rtval.push_back(func(parse_stellaris_savefile(dir_entry.path().string())));
 		auto drt = duration_cast<milliseconds>(system_clock::now() - start);
 		std::cout << "  " << (drt / progress).count() << "ms ";
 		if (drt.count() > 9999)
@@ -619,7 +645,7 @@ void populate_dataset(const std::string& folder, std::function<void(const st_gam
 		++progress;
 		int sizeofbar = (progress * 75 / filecount);
 		std::cout << "\rparsing " << dir_entry.path().filename() << "  |" << std::string(sizeofbar, '#') << std::string(75 - sizeofbar, ' ') << '|';
-		func(parse_savefile(dir_entry.path().string()));
+		func(parse_stellaris_savefile(dir_entry.path().string()));
 		std::cout << "  " << (duration_cast<milliseconds>(system_clock::now() - start) / progress).count() << "ms";
 	}
 }
