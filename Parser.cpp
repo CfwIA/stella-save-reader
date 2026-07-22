@@ -284,8 +284,14 @@ st_obj::type get_object_type(const std::string_view& text, size_t position) {
 	while (is_separator(text[position]))
 		++position;
 
-	if (text[position] == '{')
+	if (text[position] == '{') {
+		++position;
+		while (is_separator(text[position]))
+			++position;
+		if (text[position] == '}')
+			return st_obj::type::OBJECT;
 		return st_obj::type::LIST;
+	}
 	
 	// Step 2 : parse field name
 	if (text[position] == '"') {
