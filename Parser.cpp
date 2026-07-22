@@ -453,9 +453,6 @@ st_obj parse_object(const std::string_view& text, size_t& position) {
 				++position;
 				continue;
 			}
-			if (fieldname == "fighter_equipment_0") {
-				std::cout << "OKEY";
-			}
 			auto objt = get_object_type(text, position);
 			if (objt == st_obj::type::UNDEFINED)
 				throw std::runtime_error("Error while parsing object : can't determine if next datatype is either list or object");
