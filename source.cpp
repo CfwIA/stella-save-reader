@@ -27,11 +27,15 @@ int main(int argc, char** argv) {
 	}
 
 	std::string readfilepath = args[1];
-	std::string outfile = args[2];
 
 	if (readfilepath.ends_with(".hoi4")) {
 		auto gamestate = parse_raw_hoi4_savefile(readfilepath);
+		auto outfile = construct_svname(
+			gamestate.root_obj["player"].str(),
+			gamestate.root_obj["date"].str()
+		);
 		std::ofstream out(outfile);
+		std::cout << "";
 		if (out.is_open()) {
 			out << gamestate.root_obj.to_json();
 			out.close();
@@ -40,9 +44,9 @@ int main(int argc, char** argv) {
 	}
 
 	auto gamestate = parse_stellaris_savefile(readfilepath);
-	std::cout << construct_svname(
+	auto outfile = construct_svname(
 		gamestate.meta_obj.obj().contains("name") ? gamestate.meta_obj["name"].str() : gamestate.meta_obj["displayed_country_name"].str(),
-		gamestate.meta_obj["date"].str()) << '\n';
+		gamestate.meta_obj["date"].str());
 	std::ofstream out(outfile);
 	if (out.is_open()) {
 		out << gamestate.root_obj.to_json();
