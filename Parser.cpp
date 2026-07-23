@@ -571,11 +571,15 @@ std::string read_file_to_str(const std::string& filepath) {
 st_gamestate parse_raw_hoi4_savefile(const std::string& path)
 {
 	st_gamestate state;
+	auto lstart = system_clock::now();
 	state.original_data = read_file_to_str(path);
+	state.load_time = system_clock::now() - lstart;
 
 	if (state.original_data.starts_with("HOI4txt")) {
 		size_t position = 8;
+		auto start = system_clock::now();
 		state.root_obj = parse_object(state.original_data, position);
+		state.parse_time = system_clock::now() - start;
 	}
 	return state;
 }
@@ -583,11 +587,15 @@ st_gamestate parse_raw_hoi4_savefile(const std::string& path)
 st_gamestate parse_raw_eu4_savefile(const std::string& path)
 {
 	st_gamestate state;
+	auto lstart = system_clock::now();
 	state.original_data = read_file_to_str(path);
+	state.load_time = system_clock::now() - lstart;
 
 	if (state.original_data.starts_with("EU4txt")) {
 		size_t position = 7;
+		auto start = system_clock::now();
 		state.root_obj = parse_object(state.original_data, position);
+		state.parse_time = system_clock::now() - start;
 	}
 	return state;
 }

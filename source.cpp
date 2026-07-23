@@ -35,7 +35,8 @@ int main(int argc, char** argv) {
 			gamestate.root_obj["date"].str()
 		);
 		std::ofstream out(outfile);
-		std::cout << "";
+		std::cout << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.load_time);
+		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time);
 		if (out.is_open()) {
 			out << gamestate.root_obj.to_json();
 			out.close();
@@ -50,7 +51,8 @@ int main(int argc, char** argv) {
 			gamestate.root_obj["date"].str()
 		);
 		std::ofstream out(outfile);
-		std::cout << "";
+		std::cout << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.load_time);
+		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time);
 		if (out.is_open()) {
 			out << gamestate.root_obj.to_json();
 			out.close();
