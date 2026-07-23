@@ -43,6 +43,21 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
+	if (readfilepath.ends_with(".eu4")) {
+		auto gamestate = parse_raw_eu4_savefile(readfilepath);
+		auto outfile = construct_svname(
+			gamestate.root_obj["player"].str(),
+			gamestate.root_obj["date"].str()
+		);
+		std::ofstream out(outfile);
+		std::cout << "";
+		if (out.is_open()) {
+			out << gamestate.root_obj.to_json();
+			out.close();
+		}
+		return 0;
+	}
+
 	auto gamestate = parse_stellaris_savefile(readfilepath);
 	auto outfile = construct_svname(
 		gamestate.meta_obj.obj().contains("name") ? gamestate.meta_obj["name"].str() : gamestate.meta_obj["displayed_country_name"].str(),

@@ -580,6 +580,18 @@ st_gamestate parse_raw_hoi4_savefile(const std::string& path)
 	return state;
 }
 
+st_gamestate parse_raw_eu4_savefile(const std::string& path)
+{
+	st_gamestate state;
+	state.original_data = read_file_to_str(path);
+
+	if (state.original_data.starts_with("EU4txt")) {
+		size_t position = 7;
+		state.root_obj = parse_object(state.original_data, position);
+	}
+	return state;
+}
+
 std::string loadup_zip_gamestate(const std::string& path) {
 	auto* strm = ar_open_file(path.c_str());
 	if (strm == nullptr)

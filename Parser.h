@@ -55,5 +55,6 @@ struct st_gamestate {
 
 st_gamestate parse_stellaris_savefile(const std::string& path);
 st_gamestate parse_raw_hoi4_savefile(const std::string& path);
+st_gamestate parse_raw_eu4_savefile(const std::string& path);
 
 #endif
