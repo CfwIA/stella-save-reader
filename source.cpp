@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
 			out << gamestate.root_obj.to_json();
 			out.close();
 		}
-		return;
+		return 0;
 	}
 
 	auto gamestate = parse_stellaris_savefile(readfilepath);
