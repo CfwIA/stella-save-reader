@@ -26,7 +26,8 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	std::string readfilepath = args[1];
+	std::string readfilepath = args.at(1);
+	std::string outdir = args.size() == 2 ? "" : args.at(2) ;
 
 	if (readfilepath.ends_with(".hoi4")) {
 		auto gamestate = parse_raw_hoi4_savefile(readfilepath);
@@ -34,7 +35,7 @@ int main(int argc, char** argv) {
 			gamestate.root_obj["player"].str(),
 			gamestate.root_obj["date"].str()
 		);
-		std::ofstream out(outfile);
+		std::ofstream out(outdir + outfile);
 		std::cout << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.load_time);
 		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time);
 		if (out.is_open()) {
@@ -50,7 +51,7 @@ int main(int argc, char** argv) {
 			gamestate.root_obj["player"].str(),
 			gamestate.root_obj["date"].str()
 		);
-		std::ofstream out(outfile);
+		std::ofstream out(outdir + outfile);
 		std::cout << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.load_time);
 		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time);
 		if (out.is_open()) {
@@ -64,7 +65,7 @@ int main(int argc, char** argv) {
 	auto outfile = construct_svname(
 		gamestate.meta_obj.obj().contains("name") ? gamestate.meta_obj["name"].str() : gamestate.meta_obj["displayed_country_name"].str(),
 		gamestate.meta_obj["date"].str());
-	std::ofstream out(outfile);
+	std::ofstream out(outdir + outfile);
 	if (out.is_open()) {
 		out << gamestate.root_obj.to_json();
 		out.close();
