@@ -18,4 +18,4 @@ if(MSVC)
 endif()
 
 
-target_link_libraries(para-savefile-parser unarr)
+target_link_libraries(para-savefile-parser PRIVATE unarr)

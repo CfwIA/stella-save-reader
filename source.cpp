@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 		);
 		std::ofstream out(outdir + outfile);
 		std::cout << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.load_time);
-		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time);
+		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time) << '\n';
 		if (out.is_open()) {
 			out << gamestate.root_obj.to_json();
 			out.close();
@@ -53,9 +53,26 @@ int main(int argc, char** argv) {
 		);
 		std::ofstream out(outdir + outfile);
 		std::cout << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.load_time);
-		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time);
+		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time) << '\n';
 		if (out.is_open()) {
 			out << gamestate.root_obj.to_json();
+			out.close();
+		}
+		return 0;
+	}
+
+	if (readfilepath.ends_with(".txt")) {
+		// Possibly modding config files ?
+		auto state = parse_text_file(readfilepath);
+		auto outfile = readfilepath.substr(0, readfilepath.size() - 4) + ".json";
+		if (outfile.contains('/')) {
+			outfile = outfile.substr(outfile.find_last_of('/')+1);
+		}
+		std::ofstream out(outdir + outfile);
+		std::cout << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>(state.load_time);
+		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(state.parse_time) << '\n';
+		if (out.is_open()) {
+			out << state.root_obj.to_json();
 			out.close();
 		}
 		return 0;

@@ -600,6 +600,38 @@ st_gamestate parse_raw_eu4_savefile(const std::string& path)
 	return state;
 }
 
+
+st_gamestate parse_text_file(const std::string& path) {
+	st_gamestate state;
+	auto lstart = system_clock::now();
+	state.original_data = read_file_to_str(path);
+	state.load_time = system_clock::now() - lstart;
+	if (state.original_data.contains("#")) {
+		std::string newstr = "";
+		bool is_comment = false;
+		for (size_t i = 0; i < state.original_data.size(); ++i) {
+			if (state.original_data.at(i) == '#') {
+				is_comment = true;
+			}
+			if (!is_comment) {
+				newstr.push_back(state.original_data.at(i));
+			}
+			if (state.original_data.at(i) == '\n') {
+				is_comment = false;
+			}
+		}
+
+		state.original_data = newstr;
+	}
+
+	auto start = system_clock::now();
+	size_t position = 0;
+	state.root_obj = parse_object(state.original_data, position);
+	state.parse_time = system_clock::now() - start;
+	return state;
+}
+
+
 std::string loadup_zip_gamestate(const std::string& path) {
 	auto* strm = ar_open_file(path.c_str());
 	if (strm == nullptr)
