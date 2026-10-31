@@ -607,21 +607,7 @@ st_gamestate parse_text_file(const std::string& path) {
 	state.original_data = read_file_to_str(path);
 	state.load_time = system_clock::now() - lstart;
 	if (state.original_data.contains("#")) {
-		std::string newstr = "";
-		bool is_comment = false;
-		for (size_t i = 0; i < state.original_data.size(); ++i) {
-			if (state.original_data.at(i) == '#') {
-				is_comment = true;
-			}
-			if (!is_comment) {
-				newstr.push_back(state.original_data.at(i));
-			}
-			if (state.original_data.at(i) == '\n') {
-				is_comment = false;
-			}
-		}
-
-		state.original_data = newstr;
+		state.original_data = strip_str_structure_from_comments(state.original_data);
 	}
 
 	auto start = system_clock::now();
@@ -629,6 +615,24 @@ st_gamestate parse_text_file(const std::string& path) {
 	state.root_obj = parse_object(state.original_data, position);
 	state.parse_time = system_clock::now() - start;
 	return state;
+}
+
+
+std::string strip_str_structure_from_comments(const std::string& str) {
+	std::string newstr = "";
+	bool is_comment = false;
+	for (size_t i = 0; i < str.size(); ++i) {
+		if (str.at(i) == '#') {
+			is_comment = true;
+		}
+		if (!is_comment) {
+			newstr.push_back(str.at(i));
+		}
+		if (str.at(i) == '\n') {
+			is_comment = false;
+		}
+	}
+	return newstr;
 }
 
 

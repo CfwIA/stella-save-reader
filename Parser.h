@@ -53,6 +53,8 @@ struct st_gamestate {
 	std::chrono::system_clock::duration load_time;
 };
 
+std::string strip_str_structure_from_comments(const std::string& str);
+
 st_gamestate parse_stellaris_savefile(const std::string& path);
 st_gamestate parse_raw_hoi4_savefile(const std::string& path);
 st_gamestate parse_raw_eu4_savefile(const std::string& path);
