@@ -623,9 +623,6 @@ st_gamestate parse_raw_file(const std::string& path)
 	auto lstart = system_clock::now();
 	state.original_data = read_file_to_str(path);
 	state.load_time = system_clock::now() - lstart;
-	if (state.original_data.contains("#")) {
-		state.original_data = strip_str_structure_from_comments(state.original_data);
-	}
 
 	auto start = system_clock::now();
 	size_t position = 0;
@@ -633,7 +630,7 @@ st_gamestate parse_raw_file(const std::string& path)
 	if (state.original_data.starts_with("EU4txt"))
 		position = 7;
 	if (state.original_data.starts_with("HOI4txt"))
-		size_t position = 8;
+		position = 8;
 
 	state.root_obj = parse_object(state.original_data, position);
 	state.parse_time = system_clock::now() - start;
@@ -686,26 +683,50 @@ st_gamestate parse_zipped_file(const std::string& path)
 
 extern "C" {
 
-	const char* read_raw_file(const char* c_path, int32_t size)
+	char* read_raw_file(const char* c_path)
 	{
-		auto state = parse_raw_file(std::string(c_path, size));
-		auto jsonstr = state.root_obj.to_json();
-		size_t sz = jsonstr.size() + 1;
-		char* rawcstr = new char[sz];
-		memcpy(rawcstr, jsonstr.c_str(), sz - 1);
-		rawcstr[sz - 1] = '\0';
-		return rawcstr;
+		try {
+			auto state = parse_raw_file(std::string(c_path));
+			auto jsonstr = state.root_obj.to_json();
+			char* rawcstr = new char[jsonstr.length() + 1];
+			std::strcpy(rawcstr, jsonstr.c_str());
+			return rawcstr;
+		}
+		catch (const std::exception& e) {
+			std::string error_msg = "C++ Exception: " + std::string(e.what());
+			char* output = new char[error_msg.length() + 1];
+			std::strcpy(output, error_msg.c_str());
+			return output;
+		}
+		catch (...) {
+			std::string error_msg = "C++ Exception: Unknown error";
+			char* output = new char[error_msg.length() + 1];
+			std::strcpy(output, error_msg.c_str());
+			return output;
+		}
 	}
 
-	const char* read_zipped_file(const char* c_path, int32_t size)
+	char* read_zipped_file(const char* c_path)
 	{
-		auto state = parse_zipped_file(std::string(c_path, size));
-		auto jsonstr = state.root_obj.to_json();
-		size_t sz = jsonstr.size() + 1;
-		char* rawcstr = new char[sz];
-		memcpy(rawcstr, jsonstr.c_str(), sz - 1);
-		rawcstr[sz - 1] = '\0';
-		return rawcstr;
+		try {
+			auto state = parse_zipped_file(std::string(c_path));
+			auto jsonstr = state.root_obj.to_json();
+			char* rawcstr = new char[jsonstr.length() + 1];
+			std::strcpy(rawcstr, jsonstr.c_str());
+			return rawcstr;
+		}
+		catch (const std::exception& e) {
+			std::string error_msg = "C++ Exception: " + std::string(e.what());
+			char* output = new char[error_msg.length() + 1];
+			std::strcpy(output, error_msg.c_str());
+			return output;
+		}
+		catch (...) {
+			std::string error_msg = "C++ Exception: Unknown error";
+			char* output = new char[error_msg.length() + 1];
+			std::strcpy(output, error_msg.c_str());
+			return output;
+		}
 	}
 
 	void delete_c_str_ptr(const char* ptr)

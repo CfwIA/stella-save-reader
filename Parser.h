@@ -9,6 +9,12 @@
 #ifndef PARSER
 #define PARSER
 
+#ifdef _WIN32
+#define EXPORT __declspec(dllexport)
+#else
+#define EXPORT
+#endif
+
 class st_obj {
 	void to_json_private(std::ostringstream& oss) const;
 
@@ -64,9 +70,9 @@ st_gamestate parse_raw_file(const std::string& path);
 st_gamestate parse_zipped_file(const std::string& path);
 
 extern "C" {
-	const char* read_raw_file(const char* c_path, int32_t size);
-	const char* read_zipped_file(const char* c_path, int32_t size);
-	void delete_c_str_ptr(const char* ptr);
+	EXPORT char* read_raw_file(const char* c_path);
+	EXPORT char* read_zipped_file(const char* c_path);
+	EXPORT void delete_c_str_ptr(const char* ptr);
 }
 
 #endif
