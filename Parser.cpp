@@ -617,6 +617,104 @@ st_gamestate parse_text_file(const std::string& path) {
 	return state;
 }
 
+st_gamestate parse_raw_file(const std::string& path)
+{
+	st_gamestate state;
+	auto lstart = system_clock::now();
+	state.original_data = read_file_to_str(path);
+	state.load_time = system_clock::now() - lstart;
+	if (state.original_data.contains("#")) {
+		state.original_data = strip_str_structure_from_comments(state.original_data);
+	}
+
+	auto start = system_clock::now();
+	size_t position = 0;
+
+	if (state.original_data.starts_with("EU4txt"))
+		position = 7;
+	if (state.original_data.starts_with("HOI4txt"))
+		size_t position = 8;
+
+	state.root_obj = parse_object(state.original_data, position);
+	state.parse_time = system_clock::now() - start;
+	return state;
+}
+
+st_gamestate parse_zipped_file(const std::string& path)
+{
+	auto unarrstart = system_clock::now();
+	auto* strm = ar_open_file(path.c_str());
+	if (strm == nullptr)
+		throw std::runtime_error("Can't open save file");
+
+	auto* arc = ar_open_zip_archive(strm, false);
+	if (arc == nullptr)
+		throw std::runtime_error("Can't open zip archive");
+
+	st_gamestate state;
+	while (ar_parse_entry(arc)) {
+		std::string entryname = ar_entry_get_name(arc);
+		if (entryname == "gamestate") {
+			size_t size = ar_entry_get_size(arc);
+			std::vector<char> bytes(size);
+			ar_entry_uncompress(arc, bytes.data(), size);
+
+			state.original_data = std::string(bytes.data(), size);
+			state.load_time = system_clock::now() - unarrstart;
+
+			size_t position = 0;
+			auto start = system_clock::now();
+			state.root_obj = parse_object(state.original_data, position);
+			auto stop = system_clock::now();
+			state.parse_time = stop - start;
+		}
+		if (entryname == "meta") {
+			size_t size = ar_entry_get_size(arc);
+			std::vector<char> bytes(size);
+			ar_entry_uncompress(arc, bytes.data(), size);
+
+			state.meta_data = std::string(bytes.data(), size);
+
+			size_t position = 0;
+			state.meta_obj = parse_object(state.meta_data, position);
+		}
+	}
+	ar_close_archive(arc);
+	ar_close(strm);
+	return state;
+}
+
+extern "C" {
+
+	const char* read_raw_file(const char* c_path, int32_t size)
+	{
+		auto state = parse_raw_file(std::string(c_path, size));
+		auto jsonstr = state.root_obj.to_json();
+		size_t sz = jsonstr.size() + 1;
+		char* rawcstr = new char[sz];
+		memcpy(rawcstr, jsonstr.c_str(), sz - 1);
+		rawcstr[sz - 1] = '\0';
+		return rawcstr;
+	}
+
+	const char* read_zipped_file(const char* c_path, int32_t size)
+	{
+		auto state = parse_zipped_file(std::string(c_path, size));
+		auto jsonstr = state.root_obj.to_json();
+		size_t sz = jsonstr.size() + 1;
+		char* rawcstr = new char[sz];
+		memcpy(rawcstr, jsonstr.c_str(), sz - 1);
+		rawcstr[sz - 1] = '\0';
+		return rawcstr;
+	}
+
+	void delete_c_str_ptr(const char* ptr)
+	{
+		delete[] ptr;
+	}
+
+}
+
 
 std::string strip_str_structure_from_comments(const std::string& str) {
 	std::string newstr = "";

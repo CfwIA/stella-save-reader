@@ -60,4 +60,13 @@ st_gamestate parse_raw_hoi4_savefile(const std::string& path);
 st_gamestate parse_raw_eu4_savefile(const std::string& path);
 st_gamestate parse_text_file(const std::string& path);
 
+st_gamestate parse_raw_file(const std::string& path);
+st_gamestate parse_zipped_file(const std::string& path);
+
+extern "C" {
+	const char* read_raw_file(const char* c_path, int32_t size);
+	const char* read_zipped_file(const char* c_path, int32_t size);
+	void delete_c_str_ptr(const char* ptr);
+}
+
 #endif
