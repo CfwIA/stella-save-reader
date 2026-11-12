@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <chrono>
 
 #include "Parser.h"
@@ -27,6 +28,11 @@ int main(int argc, char** argv) {
 	}
 
 	std::string readfilepath = args.at(1);
+	if (!std::filesystem::exists(readfilepath)) {
+		std::cout << "File path does not exist";
+		return -1;
+	}
+	size_t filesize = std::filesystem::file_size(readfilepath);
 	std::string outdir = args.size() == 2 ? "" : args.at(2) ;
 
 	if (readfilepath.ends_with(".hoi4")) {
@@ -37,9 +43,13 @@ int main(int argc, char** argv) {
 		);
 		std::ofstream out(outdir + outfile);
 		std::cout << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.load_time);
-		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time) << '\n';
+		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time);
 		if (out.is_open()) {
-			out << gamestate.root_obj.to_json();
+			auto convstart = std::chrono::system_clock::now();
+			auto converted = gamestate.root_obj.to_json_quick(filesize);
+			auto convend = std::chrono::system_clock::now();
+			std::cout << "\nJSON build time : " << std::chrono::duration_cast<std::chrono::milliseconds>(convend - convstart) << '\n';
+			out << converted;
 			out.close();
 		}
 		return 0;
@@ -55,7 +65,11 @@ int main(int argc, char** argv) {
 		std::cout << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.load_time);
 		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time) << '\n';
 		if (out.is_open()) {
-			out << gamestate.root_obj.to_json();
+			auto convstart = std::chrono::system_clock::now();
+			auto converted = gamestate.root_obj.to_json_quick(filesize);
+			auto convend = std::chrono::system_clock::now();
+			std::cout << "\nJSON build time : " << std::chrono::duration_cast<std::chrono::milliseconds>(convend - convstart) << '\n';
+			out << converted;
 			out.close();
 		}
 		return 0;
@@ -72,7 +86,11 @@ int main(int argc, char** argv) {
 		std::cout << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>(state.load_time);
 		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(state.parse_time) << '\n';
 		if (out.is_open()) {
-			out << state.root_obj.to_json();
+			auto convstart = std::chrono::system_clock::now();
+			auto converted = state.root_obj.to_json_quick(filesize);
+			auto convend = std::chrono::system_clock::now();
+			std::cout << "\nJSON build time : " << std::chrono::duration_cast<std::chrono::milliseconds>(convend - convstart) << '\n';
+			out << converted;
 			out.close();
 		}
 		return 0;
@@ -83,8 +101,14 @@ int main(int argc, char** argv) {
 		gamestate.meta_obj.obj().contains("name") ? gamestate.meta_obj["name"].str() : gamestate.meta_obj["displayed_country_name"].str(),
 		gamestate.meta_obj["date"].str());
 	std::ofstream out(outdir + outfile);
+	std::cout << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.load_time);
+	std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time) << '\n';
 	if (out.is_open()) {
-		out << gamestate.root_obj.to_json();
+		auto convstart = std::chrono::system_clock::now();
+		auto converted = gamestate.root_obj.to_json_quick(filesize);
+		auto convend = std::chrono::system_clock::now();
+		std::cout << "\nJSON build time : " << std::chrono::duration_cast<std::chrono::milliseconds>(convend - convstart) << '\n';
+		out << converted;
 		out.close();
 	}
 	return 0;

@@ -11,7 +11,7 @@
 #include <future>
 #include <stack>
 #include <deque>
-#include <filesystem>
+#include <format>
 
 #include <unarr.h>
 
@@ -95,11 +95,76 @@ void st_obj::to_json_private(std::ostringstream &oss) const
 	oss << "null";
 }
 
+
+void st_obj::to_json_quick_priv(std::string& out) const
+{
+	if (datatype == NUMBER)
+	{
+		std::format_to(std::back_inserter(out), "{}", std::get<3>(data));
+		return;
+	}
+	if (datatype == INTEGER)
+	{
+		std::format_to(std::back_inserter(out), "{}", std::get<4>(data));
+		return;
+	}
+	if (datatype == STRING)
+	{
+		out.push_back('"');
+		out.append(purify_str(std::get<0>(data)));
+		out.push_back('"');
+		return;
+	}
+	if (datatype == LIST)
+	{
+		out.push_back('[');
+		const auto& list = std::get<1>(data);
+		for (auto it = list.begin(); it != list.end(); ++it)
+		{
+			if (it != list.begin()) out.push_back(',');
+			it->to_json_quick_priv(out);
+		}
+		out.push_back(']');
+		return;
+	}
+	if (datatype == OBJECT)
+	{
+		const auto& fields = std::get<2>(data);
+		out.push_back('{');
+		if (fields.size() == 0)
+		{
+			out.push_back('}');
+			return;
+		}
+		for (auto it = fields.begin(); it != fields.end(); ++it)
+		{
+			if (it != fields.begin())
+				out.push_back(',');
+			out.push_back('\"');
+			out.append(it->first);
+			out.push_back('\"');
+			out.push_back(':');
+			it->second.to_json_quick_priv(out);
+		}
+		out.push_back('}');
+		return;
+	}
+	out.append("null");
+}
+
 std::string st_obj::to_json() const
 {
 	std::ostringstream oss;
 	to_json_private(oss);
 	return oss.str();
+}
+
+std::string st_obj::to_json_quick(size_t initial_size_allocation)
+{
+	std::string buffer;
+	buffer.reserve(initial_size_allocation);
+	to_json_quick_priv(buffer);
+	return buffer;
 }
 
 st_obj::operator std::string_view &()
@@ -694,9 +759,17 @@ extern "C" {
 
 	char* read_raw_file(const char* c_path)
 	{
+		auto path = std::string(c_path);
+		if (!std::filesystem::is_regular_file(path)) {
+			std::string error_msg = "ERROR: Path is not regular file";
+			char* output = new char[error_msg.length() + 1];
+			std::strcpy(output, error_msg.c_str());
+			return output;
+		}
+		size_t fsize = std::filesystem::file_size(path);
 		try {
-			auto state = parse_raw_file(std::string(c_path));
-			auto jsonstr = state.root_obj.to_json();
+			auto state = parse_raw_file(path);
+			auto jsonstr = state.root_obj.to_json_quick(fsize);
 			char* rawcstr = new char[jsonstr.length() + 1];
 			std::strcpy(rawcstr, jsonstr.c_str());
 			return rawcstr;
@@ -717,9 +790,17 @@ extern "C" {
 
 	char* read_zipped_file(const char* c_path)
 	{
+		auto path = std::string(c_path);
+		if (!std::filesystem::is_regular_file(path)) {
+			std::string error_msg = "ERROR: Path is not regular file";
+			char* output = new char[error_msg.length() + 1];
+			std::strcpy(output, error_msg.c_str());
+			return output;
+		}
+		size_t fsize = std::filesystem::file_size(path);
 		try {
-			auto state = parse_zipped_file(std::string(c_path));
-			auto jsonstr = state.root_obj.to_json();
+			auto state = parse_zipped_file(path);
+			auto jsonstr = state.root_obj.to_json_quick(fsize);
 			char* rawcstr = new char[jsonstr.length() + 1];
 			std::strcpy(rawcstr, jsonstr.c_str());
 			return rawcstr;

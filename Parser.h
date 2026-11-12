@@ -17,6 +17,7 @@
 
 class st_obj {
 	void to_json_private(std::ostringstream& oss) const;
+	void to_json_quick_priv(std::string& out) const;
 
 public:
 	//using field_t = std::map<std::string_view, st_obj>;
@@ -34,6 +35,8 @@ public:
 	} datatype = UNDEFINED;
 
 	std::string to_json() const;
+	std::string to_json_quick(size_t initial_size_allocation);
+
 	operator std::string_view& ();
 	operator double();
 	std::string str() const;
