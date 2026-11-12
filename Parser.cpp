@@ -11,6 +11,7 @@
 #include <future>
 #include <stack>
 #include <deque>
+#include <filesystem>
 
 #include <unarr.h>
 
@@ -558,14 +559,22 @@ st_gamestate parse_stellaris_savefile(const std::string& path) {
 }
 
 std::string read_file_to_str(const std::string& filepath) {
-	std::ifstream fileStream(filepath);
+	std::ifstream fileStream(filepath, std::ios::binary);
 	if (!fileStream.is_open()) {
 		throw std::runtime_error("Failed to open file: " + filepath);
 	}
+	auto fsize = std::filesystem::file_size(filepath);
+	std::string filedata;
+	filedata.resize_and_overwrite(fsize, [&](char* buf, std::size_t bsize) {
+		fileStream.read(buf, std::streamsize(bsize));
+		return size_t(fileStream.gcount());
+		});
 
-	std::stringstream stringBuffer;
-	stringBuffer << fileStream.rdbuf();
-	return stringBuffer.str();
+	if (fileStream.bad()) {
+		throw std::runtime_error("IOError occured while reading the file");
+	}
+
+	return filedata;
 }
 
 st_gamestate parse_raw_hoi4_savefile(const std::string& path)
