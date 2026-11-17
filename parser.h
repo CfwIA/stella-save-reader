@@ -56,13 +56,12 @@ struct st_gamestate {
 
 std::string strip_str_structure_from_comments(const std::string& str);
 
-st_gamestate parse_stellaris_savefile(const std::string& path);
-st_gamestate parse_raw_hoi4_savefile(const std::string& path);
-st_gamestate parse_raw_eu4_savefile(const std::string& path);
-st_gamestate parse_text_file(const std::string& path);
 
-st_gamestate parse_raw_file(const std::string& path);
-st_gamestate parse_zipped_file(const std::string& path);
+st_gamestate parse_text_sysfile(const std::string& path);
+st_gamestate parse_text_savefile(const std::string& path);
+st_gamestate parse_zipped_savefile(const std::string& path);
+
+
 
 
 #endif

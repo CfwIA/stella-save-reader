@@ -8,8 +8,9 @@
 #endif
 
 extern "C" {
-	EXPORT char* read_raw_file(const char* c_path);
-	EXPORT char* read_zipped_file(const char* c_path);
+	EXPORT char* parse_text_sysfile_to_json(const char* c_path);
+	EXPORT char* parse_text_savefile_to_json(const char* c_path);
+	EXPORT char* parse_zip_savefile_to_json(const char* c_path);
 	EXPORT void delete_c_str_ptr(const char* ptr);
 }
 

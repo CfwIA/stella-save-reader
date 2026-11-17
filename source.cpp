@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
 	std::string outdir = args.size() == 2 ? "" : args.at(2) ;
 
 	if (readfilepath.ends_with(".hoi4")) {
-		auto gamestate = parse_raw_hoi4_savefile(readfilepath);
+		auto gamestate = parse_text_savefile(readfilepath);
 		auto outfile = construct_svname(
 			gamestate.root_obj["player"].str(),
 			gamestate.root_obj["date"].str()
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 	}
 
 	if (readfilepath.ends_with(".eu4")) {
-		auto gamestate = parse_raw_eu4_savefile(readfilepath);
+		auto gamestate = parse_text_savefile(readfilepath);
 		auto outfile = construct_svname(
 			gamestate.root_obj["player"].str(),
 			gamestate.root_obj["date"].str()
@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
 
 	if (readfilepath.ends_with(".txt")) {
 		// Possibly modding config files ?
-		auto state = parse_text_file(readfilepath);
+		auto state = parse_text_sysfile(readfilepath);
 		auto outfile = readfilepath.substr(0, readfilepath.size() - 4) + ".json";
 		if (outfile.contains('/')) {
 			outfile = outfile.substr(outfile.find_last_of('/')+1);
@@ -96,20 +96,22 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
-	auto gamestate = parse_stellaris_savefile(readfilepath);
-	auto outfile = construct_svname(
-		gamestate.meta_obj.obj().contains("name") ? gamestate.meta_obj["name"].str() : gamestate.meta_obj["displayed_country_name"].str(),
-		gamestate.meta_obj["date"].str());
-	std::ofstream out(outdir + outfile);
-	std::cout << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.load_time);
-	std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time) << '\n';
-	if (out.is_open()) {
-		auto convstart = std::chrono::system_clock::now();
-		auto converted = gamestate.root_obj.to_json(filesize);
-		auto convend = std::chrono::system_clock::now();
-		std::cout << "\nJSON build time : " << std::chrono::duration_cast<std::chrono::milliseconds>(convend - convstart) << '\n';
-		out << converted;
-		out.close();
+	if (readfilepath.ends_with(".sav")) {
+		auto gamestate = parse_zipped_savefile(readfilepath);
+		auto outfile = construct_svname(
+			gamestate.meta_obj.obj().contains("name") ? gamestate.meta_obj["name"].str() : gamestate.meta_obj["displayed_country_name"].str(),
+			gamestate.meta_obj["date"].str());
+		std::ofstream out(outdir + outfile);
+		std::cout << "Load time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.load_time);
+		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time) << '\n';
+		if (out.is_open()) {
+			auto convstart = std::chrono::system_clock::now();
+			auto converted = gamestate.root_obj.to_json(filesize);
+			auto convend = std::chrono::system_clock::now();
+			std::cout << "\nJSON build time : " << std::chrono::duration_cast<std::chrono::milliseconds>(convend - convstart) << '\n';
+			out << converted;
+			out.close();
+		}
 	}
 	return 0;
 }
