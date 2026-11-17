@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time);
 		if (out.is_open()) {
 			auto convstart = std::chrono::system_clock::now();
-			auto converted = gamestate.root_obj.to_json_quick(filesize);
+			auto converted = gamestate.root_obj.to_json(filesize);
 			auto convend = std::chrono::system_clock::now();
 			std::cout << "\nJSON build time : " << std::chrono::duration_cast<std::chrono::milliseconds>(convend - convstart) << '\n';
 			out << converted;
@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
 		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time) << '\n';
 		if (out.is_open()) {
 			auto convstart = std::chrono::system_clock::now();
-			auto converted = gamestate.root_obj.to_json_quick(filesize);
+			auto converted = gamestate.root_obj.to_json(filesize);
 			auto convend = std::chrono::system_clock::now();
 			std::cout << "\nJSON build time : " << std::chrono::duration_cast<std::chrono::milliseconds>(convend - convstart) << '\n';
 			out << converted;
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
 		std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(state.parse_time) << '\n';
 		if (out.is_open()) {
 			auto convstart = std::chrono::system_clock::now();
-			auto converted = state.root_obj.to_json_quick(filesize);
+			auto converted = state.root_obj.to_json(filesize);
 			auto convend = std::chrono::system_clock::now();
 			std::cout << "\nJSON build time : " << std::chrono::duration_cast<std::chrono::milliseconds>(convend - convstart) << '\n';
 			out << converted;
@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
 	std::cout << "\nParse time : " << std::chrono::duration_cast<std::chrono::milliseconds>(gamestate.parse_time) << '\n';
 	if (out.is_open()) {
 		auto convstart = std::chrono::system_clock::now();
-		auto converted = gamestate.root_obj.to_json_quick(filesize);
+		auto converted = gamestate.root_obj.to_json(filesize);
 		auto convend = std::chrono::system_clock::now();
 		std::cout << "\nJSON build time : " << std::chrono::duration_cast<std::chrono::milliseconds>(convend - convstart) << '\n';
 		out << converted;

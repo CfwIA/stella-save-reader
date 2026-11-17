@@ -9,14 +9,7 @@
 #ifndef PARSER
 #define PARSER
 
-#ifdef _WIN32
-#define EXPORT __declspec(dllexport)
-#else
-#define EXPORT
-#endif
-
 class st_obj {
-	void to_json_private(std::ostringstream& oss) const;
 	void to_json_quick_priv(std::string& out) const;
 
 public:
@@ -34,8 +27,7 @@ public:
 		INTEGER
 	} datatype = UNDEFINED;
 
-	std::string to_json() const;
-	std::string to_json_quick(size_t initial_size_allocation);
+	std::string to_json(size_t initial_size_allocation) const;
 
 	operator std::string_view& ();
 	operator double();
@@ -72,10 +64,5 @@ st_gamestate parse_text_file(const std::string& path);
 st_gamestate parse_raw_file(const std::string& path);
 st_gamestate parse_zipped_file(const std::string& path);
 
-extern "C" {
-	EXPORT char* read_raw_file(const char* c_path);
-	EXPORT char* read_zipped_file(const char* c_path);
-	EXPORT void delete_c_str_ptr(const char* ptr);
-}
 
 #endif

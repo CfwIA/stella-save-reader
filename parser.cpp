@@ -25,15 +25,6 @@ bool is_printable_char(char c) {
 	return c >= 32 && c < 127;
 }
 
-std::unordered_map<st_obj::type, std::string> string_type_table {
-	{st_obj::type::INTEGER, "integer"},
-	{st_obj::type::LIST, "list"},
-	{st_obj::type::NUMBER, "number"},
-	{st_obj::type::OBJECT, "object"},
-	{st_obj::type::STRING, "string"},
-	{st_obj::type::UNDEFINED, "undefined"}
-};
-
 std::string purify_str(const std::string_view& v) {
 	std::string str = std::string(v);
 	for (auto& a : str) {
@@ -42,59 +33,6 @@ std::string purify_str(const std::string_view& v) {
 	}
 	return str;
 }
-
-void st_obj::to_json_private(std::ostringstream &oss) const
-{
-	if (datatype == NUMBER)
-	{
-		oss << std::get<3>(data);
-		return;
-	}
-	if (datatype == INTEGER)
-	{
-		oss << std::get<4>(data);
-		return;
-	}
-	if (datatype == STRING)
-	{
-		oss << '\"' << purify_str(std::get<0>(data)) << '\"';
-		return;
-	}
-	if (datatype == LIST)
-	{
-		oss << "[";
-		const auto &list = std::get<1>(data);
-		for (auto it = list.begin(); it != list.end(); ++it)
-		{
-			if (it != list.begin())
-				oss << ',';
-			it->to_json_private(oss);
-		}
-		oss << ']';
-		return;
-	}
-	if (datatype == OBJECT)
-	{
-		const auto &fields = std::get<2>(data);
-		if (fields.size() == 0)
-		{
-			oss << "{}";
-			return;
-		}
-		oss << '{';
-		for (auto it = fields.begin(); it != fields.end(); ++it)
-		{
-			if (it != fields.begin())
-				oss << ',';
-			oss << '\"' << it->first << "\":";
-			it->second.to_json_private(oss);
-		}
-		oss << '}';
-		return;
-	}
-	oss << "null";
-}
-
 
 void st_obj::to_json_quick_priv(std::string& out) const
 {
@@ -152,14 +90,7 @@ void st_obj::to_json_quick_priv(std::string& out) const
 	out.append("null");
 }
 
-std::string st_obj::to_json() const
-{
-	std::ostringstream oss;
-	to_json_private(oss);
-	return oss.str();
-}
-
-std::string st_obj::to_json_quick(size_t initial_size_allocation)
+std::string st_obj::to_json(size_t initial_size_allocation) const
 {
 	std::string buffer;
 	buffer.reserve(initial_size_allocation);
@@ -755,76 +686,6 @@ st_gamestate parse_zipped_file(const std::string& path)
 	return state;
 }
 
-extern "C" {
-
-	char* read_raw_file(const char* c_path)
-	{
-		auto path = std::string(c_path);
-		if (!std::filesystem::is_regular_file(path)) {
-			std::string error_msg = "ERROR: Path is not regular file";
-			char* output = new char[error_msg.length() + 1];
-			std::strcpy(output, error_msg.c_str());
-			return output;
-		}
-		size_t fsize = std::filesystem::file_size(path);
-		try {
-			auto state = parse_raw_file(path);
-			auto jsonstr = state.root_obj.to_json_quick(fsize);
-			char* rawcstr = new char[jsonstr.length() + 1];
-			std::strcpy(rawcstr, jsonstr.c_str());
-			return rawcstr;
-		}
-		catch (const std::exception& e) {
-			std::string error_msg = "C++ Exception: " + std::string(e.what());
-			char* output = new char[error_msg.length() + 1];
-			std::strcpy(output, error_msg.c_str());
-			return output;
-		}
-		catch (...) {
-			std::string error_msg = "C++ Exception: Unknown error";
-			char* output = new char[error_msg.length() + 1];
-			std::strcpy(output, error_msg.c_str());
-			return output;
-		}
-	}
-
-	char* read_zipped_file(const char* c_path)
-	{
-		auto path = std::string(c_path);
-		if (!std::filesystem::is_regular_file(path)) {
-			std::string error_msg = "ERROR: Path is not regular file";
-			char* output = new char[error_msg.length() + 1];
-			std::strcpy(output, error_msg.c_str());
-			return output;
-		}
-		size_t fsize = std::filesystem::file_size(path);
-		try {
-			auto state = parse_zipped_file(path);
-			auto jsonstr = state.root_obj.to_json_quick(fsize);
-			char* rawcstr = new char[jsonstr.length() + 1];
-			std::strcpy(rawcstr, jsonstr.c_str());
-			return rawcstr;
-		}
-		catch (const std::exception& e) {
-			std::string error_msg = "C++ Exception: " + std::string(e.what());
-			char* output = new char[error_msg.length() + 1];
-			std::strcpy(output, error_msg.c_str());
-			return output;
-		}
-		catch (...) {
-			std::string error_msg = "C++ Exception: Unknown error";
-			char* output = new char[error_msg.length() + 1];
-			std::strcpy(output, error_msg.c_str());
-			return output;
-		}
-	}
-
-	void delete_c_str_ptr(const char* ptr)
-	{
-		delete[] ptr;
-	}
-
-}
 
 
 std::string strip_str_structure_from_comments(const std::string& str) {
@@ -866,49 +727,5 @@ std::string loadup_zip_gamestate(const std::string& path) {
 		}
 	}
 	throw std::runtime_error("Can't file gamestate entry in save file");
-}
-
-template<typename T>
-std::vector<T> populate_dataset(const std::string& folder, std::function<T(const st_gamestate&)> func) {
-	auto start = system_clock::now();
-	std::vector<T> rtval;
-	using namespace std::filesystem;
-	size_t filecount = 0;
-	for (const auto& dir_entry : recursive_directory_iterator(path(folder)))
-		++filecount;
-	size_t progress = 0;
-
-	for (const auto& dir_entry : recursive_directory_iterator(path(folder))) {
-		++progress;
-		int sizeofbar = (progress * 65 / filecount);
-		std::cout << "\rparsing " << dir_entry.path().filename() << "  |" << std::string(sizeofbar, '#') << std::string(65 - sizeofbar, ' ') << '|';
-		rtval.push_back(func(parse_stellaris_savefile(dir_entry.path().string())));
-		auto drt = duration_cast<milliseconds>(system_clock::now() - start);
-		std::cout << "  " << (drt / progress).count() << "ms ";
-		if (drt.count() > 9999)
-			std::cout << duration_cast<seconds>(drt).count() << "s   ";
-		else
-			std::cout << drt.count() << "ms";
-
-	}
-	std::cout << "\nFull parsing time taken : " << duration_cast<milliseconds>(system_clock::now()-start).count() << "ms" << '\n';
-	return rtval;
-}
-
-void populate_dataset(const std::string& folder, std::function<void(const st_gamestate&)> func) {
-	using namespace std::filesystem;
-	size_t filecount = 0;
-	for (const auto& dir_entry : recursive_directory_iterator(path(folder)))
-		++filecount;
-	size_t progress = 0;
-
-	auto start = std::chrono::system_clock::now();
-	for (const auto& dir_entry : recursive_directory_iterator(path(folder))) {
-		++progress;
-		int sizeofbar = (progress * 75 / filecount);
-		std::cout << "\rparsing " << dir_entry.path().filename() << "  |" << std::string(sizeofbar, '#') << std::string(75 - sizeofbar, ' ') << '|';
-		func(parse_stellaris_savefile(dir_entry.path().string()));
-		std::cout << "  " << (duration_cast<milliseconds>(system_clock::now() - start) / progress).count() << "ms";
-	}
 }
 
