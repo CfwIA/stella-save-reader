@@ -29,19 +29,23 @@ public:
 
 	std::string to_json(size_t initial_size_allocation) const;
 
-	operator std::string_view& ();
-	operator double();
+	long long integer() const;
+	double number() const;
 	std::string str() const;
+
 	vector_t& list();
 	const vector_t& list() const;
-	double number() const;
+
 	field_t& obj();
 	const field_t& obj() const;
+
 	st_obj& operator[](const size_t index);
 	const st_obj& operator[](const size_t index) const;
+
 	st_obj& operator[](const char* const fieldname);
 	const st_obj& operator[](const char* const fieldname) const;
 	bool has_field(const std::string& f) const;
+
 	std::string get_datatype_str() const;
 };
 

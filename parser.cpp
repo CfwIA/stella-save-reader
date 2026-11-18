@@ -98,14 +98,14 @@ std::string st_obj::to_json(size_t initial_size_allocation) const
 	return buffer;
 }
 
-st_obj::operator std::string_view &()
+long long st_obj::integer() const
 {
-	if (datatype != STRING)
-		throw std::runtime_error("std::string_view conversion operator error");
-	return std::get<0>(data);
+	if (datatype != INTEGER)
+		throw std::runtime_error("operator double conversion operator error");
+	return std::get<4>(data);
 }
 
-st_obj::operator double()
+double st_obj::number() const
 {
 	if (datatype != NUMBER)
 		throw std::runtime_error("operator double conversion operator error");
@@ -131,13 +131,6 @@ const st_obj::vector_t &st_obj::list() const
 	if (datatype != LIST)
 		throw std::runtime_error("str() function error");
 	return std::get<1>(data);
-}
-
-double st_obj::number() const
-{
-	if (datatype != NUMBER)
-		throw std::runtime_error("operator double conversion operator error");
-	return std::get<3>(data);
 }
 
 st_obj::field_t &st_obj::obj()
@@ -568,11 +561,11 @@ st_gamestate parse_zipped_savefile(const std::string& path)
 	auto unarrstart = system_clock::now();
 	auto* strm = ar_open_file(path.c_str());
 	if (strm == nullptr)
-		throw std::runtime_error("Can't open save file");
+		throw std::runtime_error("Can't open save file : " + path);
 
 	auto* arc = ar_open_zip_archive(strm, false);
 	if (arc == nullptr)
-		throw std::runtime_error("Can't open zip archive");
+		throw std::runtime_error("Can't open zip archive : " + path);
 
 	st_gamestate state;
 	while (ar_parse_entry(arc)) {
