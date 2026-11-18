@@ -17,7 +17,7 @@ py::dict convert_obj_to_dict(const st_obj& obj);
 
 py::list convert_obj_to_list(const st_obj& obj) {
 	py::list result;
-	auto llist = obj.list();
+	const auto& llist = obj.list();
 
 	for (const auto& elem : llist) {
 
@@ -46,7 +46,7 @@ py::list convert_obj_to_list(const st_obj& obj) {
 
 py::dict convert_obj_to_dict(const st_obj& obj) {
 	py::dict result;
-	auto lobj = obj.obj();
+	const auto& lobj = obj.obj();
 
 	for (const auto& fd : lobj) {
 
