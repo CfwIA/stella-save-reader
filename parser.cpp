@@ -412,7 +412,7 @@ st_obj parse_object(const std::string_view& text, size_t& position) {
 			size_t fieldidstart = position;
 			while (text[position] != '"')
 				++position;
-			fieldname = text.substr(fieldidstart, position - fieldidstart - 1);
+			fieldname = text.substr(fieldidstart, position - fieldidstart);
 			++position;
 		}
 		else {
